@@ -1,0 +1,115 @@
+###Customer Demographics Analysis
+
+
+SELECT 
+    Gender,
+    COUNT(CustomerKey) AS Total_Customers,
+    AVG(TIMESTAMPDIFF(YEAR, Birthday, CURDATE())) AS Average_Age
+FROM customers
+GROUP BY Gender;
+
+
+###2. Sales Performance by Month
+SELECT 
+    DATE_FORMAT(OrderDate, '%Y-%m') AS Month,
+    SUM(s.Quantity) AS Total_Quantity_Sold,
+    SUM(p.UnitPriceUSD * s.Quantity) AS Total_Revenue
+FROM sales s
+JOIN products p ON s.ProductKey = p.ProductKey
+GROUP BY Month
+ORDER BY Month;
+
+
+
+####3. Top 5 Best-Selling Products
+SELECT 
+    p.ProductName,
+    SUM(s.Quantity) AS Total_Quantity_Sold
+FROM sales s
+JOIN products p ON s.ProductKey = p.ProductKey
+GROUP BY p.ProductName
+ORDER BY Total_Quantity_Sold DESC
+LIMIT 5;
+
+
+
+##4. Sales by Region (State, Country)
+SELECT 
+    st.Country,
+    st.State,
+    SUM(s.Quantity * p.UnitPriceUSD) AS Total_Revenue
+FROM sales s
+JOIN stores st ON s.StoreKey = st.StoreKey
+JOIN products p ON s.ProductKey = p.ProductKey
+GROUP BY st.Country, st.State
+ORDER BY Total_Revenue DESC;
+
+###5. Customer Demographics and Purchase Behavior
+
+SELECT 
+    c.Gender, 
+    c.Country, 
+    c.Continent, 
+    COUNT(DISTINCT c.CustomerKey) AS Total_Customers, 
+    AVG(s.Total_Purchase_Value) AS Avg_Purchase_Value
+FROM customers c
+JOIN (
+    SELECT 
+        s.CustomerKey, 
+        SUM(s.Quantity * p.UnitPriceUSD) AS Total_Purchase_Value
+    FROM sales s
+    JOIN products p ON s.ProductKey = p.ProductKey
+    GROUP BY s.CustomerKey
+) s ON c.CustomerKey = s.CustomerKey
+GROUP BY c.Gender, c.Country, c.Continent
+ORDER BY Avg_Purchase_Value DESC;
+
+
+
+####7. Top 10 Most Profitable Products by Category
+SELECT 
+    p.Category, 
+    p.ProductName, 
+    SUM(s.Quantity * (p.UnitPriceUSD - p.UnitCostUSD)) AS Total_Profit
+FROM sales s
+JOIN products p ON s.ProductKey = p.ProductKey
+GROUP BY p.Category, p.ProductName
+ORDER BY Total_Profit DESC
+LIMIT 10;
+
+
+
+###8. Average Quantity Sold by Product Category
+SELECT 
+    p.Category, 
+    AVG(s.Quantity) AS Avg_Quantity_Sold
+FROM sales s
+JOIN products p ON s.ProductKey = p.ProductKey
+GROUP BY p.Category
+ORDER BY Avg_Quantity_Sold DESC;
+
+
+
+###9 3. Best-Selling Products by Region
+SELECT 
+    c.Country, 
+    p.ProductName, 
+    SUM(s.Quantity) AS Total_Quantity_Sold, 
+    SUM(s.Quantity * p.UnitPriceUSD) AS Total_Sales
+FROM sales s
+JOIN products p ON s.ProductKey = p.ProductKey
+JOIN customers c ON s.CustomerKey = c.CustomerKey
+GROUP BY c.Country, p.ProductName
+ORDER BY Total_Sales DESC;
+
+
+
+###10 5. Products with the Longest Delivery Time
+
+SELECT 
+    p.ProductName, 
+    AVG(DATEDIFF(s.DeliveryDate, s.OrderDate)) AS Avg_Delivery_Time
+FROM sales s
+JOIN products p ON s.ProductKey = p.ProductKey
+GROUP BY p.ProductName
+ORDER BY Avg_Delivery_Time DESC;
